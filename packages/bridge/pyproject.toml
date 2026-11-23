@@ -1,0 +1,18 @@
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "gecko-antigravity-bridge"
+version = "0.6.0"
+description = "Local Native Messaging Bridge and MCP Remote Arm for Gecko for Antigravity"
+requires-python = ">=3.10"
+dependencies = []
+
+[project.optional-dependencies]
+sdk = ["google-antigravity>=0.1.24,<0.2"]
+
+[project.scripts]
+agy-bridge-host = "agy_bridge.native_host:main"
+agy-bridge-mcp = "agy_bridge.mcp_server:main"
+
