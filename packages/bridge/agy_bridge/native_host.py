@@ -28,6 +28,17 @@ TOOL_CALL_TIMEOUT = 25
 VALID_TOOL_NAMES = frozenset(tool["name"] for tool in BROWSER_TOOLS)
 
 
+if hasattr(contextlib, "aclosing"):
+    _aclosing = contextlib.aclosing
+else:
+    @contextlib.asynccontextmanager
+    async def _aclosing(thing: Any):
+        try:
+            yield thing
+        finally:
+            await thing.aclose()
+
+
 def relay_info_path() -> Path:
     if sys.platform == "win32":
         base = Path(os.environ.get("LOCALAPPDATA", str(Path.home()))) / "AntigravityWork"
@@ -173,7 +184,7 @@ class NativeMessagingBridge:
                 await self._run_agent_chat(request_id, message, contexts, history, model, adapter, initial_snapshot)
             else:
                 generator = adapter.stream_chat(build_prompt(message, contexts, history), model)
-                async with contextlib.aclosing(generator):
+                async with _aclosing(generator):
                     await asyncio.wait_for(self._stream(request_id, generator), timeout=100)
             self.send({"id": request_id, "type": "chat.done"})
         except asyncio.CancelledError:
@@ -233,7 +244,7 @@ class NativeMessagingBridge:
         while True:
             prompt = build_agent_prompt(message, contexts, history, tool_trace, initial_snapshot)
             generator = adapter.stream_chat(prompt, model)
-            async with contextlib.aclosing(generator):
+            async with _aclosing(generator):
                 turn_text = await asyncio.wait_for(self._collect_turn(generator), timeout=100)
             calls = extract_tool_calls(turn_text)
             if calls:

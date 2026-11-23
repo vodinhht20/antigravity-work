@@ -49,7 +49,7 @@ fi
 PYTHON_BIN=""
 for candidate in /opt/homebrew/bin/python3 /usr/local/bin/python3 "$(command -v python3 || true)" /usr/bin/python3; do
   if [ -n "$candidate" ] && [ -x "$candidate" ]; then
-    if "$candidate" -c "import sys; raise SystemExit(0 if sys.version_info >= (3, 10) else 1)" 2>/dev/null; then
+    if "$candidate" -c "import sys; raise SystemExit(0 if sys.version_info >= (3, 9) else 1)" 2>/dev/null; then
       PYTHON_BIN="$candidate"
       break
     fi
@@ -57,7 +57,7 @@ for candidate in /opt/homebrew/bin/python3 /usr/local/bin/python3 "$(command -v 
 done
 
 if [ -z "$PYTHON_BIN" ]; then
-  echo "Error: Python 3.10+ is required. Install it via Homebrew (brew install python) or https://www.python.org/downloads/." >&2
+  echo "Error: Python 3.9+ is required. Install it via Homebrew (brew install python) or https://www.python.org/downloads/." >&2
   exit 1
 fi
 

@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "gecko-antigravity-bridge"
 version = "0.6.0"
 description = "Local Native Messaging Bridge and MCP Remote Arm for Gecko for Antigravity"
-requires-python = ">=3.10"
+requires-python = ">=3.9"
 dependencies = []
 
 [project.optional-dependencies]
