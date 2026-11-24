@@ -21,6 +21,17 @@
    - Gợi ý cài thêm **Antigravity Python SDK (`--sdk`)** nếu máy chưa có `agy` CLI.
 4. Quay lại Side Panel — extension tự động kiểm tra kết nối mỗi 3 giây và chuyển sang **Sẵn sàng**.
 
+## Gỡ cài đặt companion (1 dòng lệnh)
+
+- **macOS / Linux**:
+  ```bash
+  curl -fsSL https://raw.githubusercontent.com/vodinhht20/antigravity-work/main/uninstall.sh | bash
+  ```
+- **Windows (PowerShell)**:
+  ```powershell
+  irm https://raw.githubusercontent.com/vodinhht20/antigravity-work/main/uninstall.ps1 | iex
+  ```
+
 ## Tính năng nổi bật
 
 - **Tốc độ cao & không giới hạn bước**: Tự đính kèm snapshot ban đầu (~20ms), gộp nhiều thao tác trong 1 lượt AI (multi-tool batching), tự nén lịch sử bước cũ (rolling compression).
