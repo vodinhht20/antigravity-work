@@ -432,7 +432,7 @@ export function App() {
   const isMac = /Mac|iPhone|iPad/i.test(navigator.userAgent);
   const isWindows = /Windows/i.test(navigator.userAgent);
   const installCmd = isWindows
-    ? `$env:GECKO_EXT_ID="${chrome.runtime.id}"; irm https://raw.githubusercontent.com/vodinhht20/antigravity-work/main/install.ps1 | iex`
+    ? `irm https://raw.githubusercontent.com/vodinhht20/antigravity-work/main/install.ps1 | iex; Install-Gecko ${chrome.runtime.id}`
     : `curl -fsSL https://raw.githubusercontent.com/vodinhht20/antigravity-work/main/install.sh | bash -s -- ${chrome.runtime.id}`;
   const showSetupWizard = status.phase === "error" && (status.code === "HOST_MISSING" || status.code === "HOST_FORBIDDEN");
   const showBackendWizard = status.phase === "error" && (status.code === "CLI_MISSING" || status.code === "SDK_AUTH_REQUIRED");

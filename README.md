@@ -13,9 +13,9 @@
      *(Nếu máy Mac chỉ cài Antigravity App và chưa có `agy` CLI, thêm `--sdk` ở cuối lệnh).*
    - **Windows (PowerShell)**:
      ```powershell
-     $env:GECKO_EXT_ID="<EXTENSION_ID>"; irm https://raw.githubusercontent.com/vodinhht20/antigravity-work/main/install.ps1 | iex
+     irm https://raw.githubusercontent.com/vodinhht20/antigravity-work/main/install.ps1 | iex; Install-Gecko <EXTENSION_ID>
      ```
-     *(Hoặc chỉ cần chạy `irm https://raw.githubusercontent.com/vodinhht20/antigravity-work/main/install.ps1 | iex`, bộ cài sẽ tự hỏi Extension ID).*
+     *(Có thể thêm `-Sdk` hoặc `-Browser chrome` ở cuối lệnh, ví dụ `Install-Gecko <EXTENSION_ID> -Sdk`).*
 3. Bộ cài tự động:
    - Đăng ký Native Messaging Host cho Chrome/Edge/Brave/Chromium (có launcher wrapper nạp đầy đủ `PATH` trên macOS).
    - Tự đăng ký MCP Server `gecko-for-antigravity` vào `~/.gemini/antigravity/mcp_config.json` để **Antigravity App / IDE** ra lệnh trực tiếp cho Chrome.
