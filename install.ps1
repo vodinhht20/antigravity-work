@@ -4,6 +4,7 @@ function Install-Gecko {
         [string]$ExtensionId = "",
         [string]$Browser = "all",
         [switch]$Sdk,
+        [switch]$SkipCli,
         [string]$Ref = "main"
     )
 
@@ -46,6 +47,18 @@ function Install-Gecko {
         $InstallArgs = @($Installer.FullName, "--extension-id", $ExtensionId, "--browser", $Browser, "--mcp")
         if ($Sdk) { $InstallArgs += "--sdk" }
 
+        $CliJustInstalled = $false
+        $HasAgy = (Get-Command agy -ErrorAction SilentlyContinue) -or (Test-Path (Join-Path $env:LOCALAPPDATA "agy\bin\agy.exe"))
+        if (-not $SkipCli -and -not $HasAgy) {
+            Write-Host "Antigravity CLI ('agy') not found. Installing official Antigravity CLI..."
+            try {
+                irm https://antigravity.google/cli/install.ps1 | iex
+                $CliJustInstalled = $true
+            } catch {
+                Write-Warning "Could not auto-install Antigravity CLI ($_). Continuing with companion & MCP installation..."
+            }
+        }
+
         Write-Host "Installing companion..."
         & $PythonCmd.Source @InstallArgs
         if ($LASTEXITCODE -ne 0) {
@@ -54,6 +67,9 @@ function Install-Gecko {
 
         Write-Host ""
         Write-Host "Done! Return to Chrome -> Gecko for Antigravity Side Panel (it will auto-connect within 3 seconds)."
+        if ($CliJustInstalled) {
+            Write-Host "Next step: Run 'agy' once in a new PowerShell window to sign in with your Google account, then start chatting in Gecko!"
+        }
     }
     finally {
         if (Test-Path $TmpDir) {

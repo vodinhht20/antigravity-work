@@ -17,9 +17,9 @@
      ```
      *(Có thể thêm `-Sdk` hoặc `-Browser chrome` ở cuối lệnh, ví dụ `Install-Gecko <EXTENSION_ID> -Sdk`).*
 3. Bộ cài tự động:
+   - Kiểm tra xem máy đã có **Antigravity CLI (`agy`)** chưa — nếu chưa sẽ tự cài bản chính thức từ `antigravity.google` (có thể bỏ qua bằng `--skip-cli` / `-SkipCli`).
    - Đăng ký Native Messaging Host cho Chrome/Edge/Brave/Chromium (có launcher wrapper nạp đầy đủ `PATH` trên macOS).
    - Tự đăng ký MCP Server `gecko-for-antigravity` vào `~/.gemini/antigravity/mcp_config.json` để **Antigravity App / IDE** ra lệnh trực tiếp cho Chrome.
-   - Gợi ý cài thêm **Antigravity Python SDK (`--sdk`)** nếu máy chưa có `agy` CLI.
 4. Quay lại Side Panel — extension tự động kiểm tra kết nối mỗi 3 giây và chuyển sang **Sẵn sàng**.
 
 ## Gỡ cài đặt companion (1 dòng lệnh)

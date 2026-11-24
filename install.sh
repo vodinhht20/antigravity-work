@@ -5,6 +5,7 @@ REPO="vodinhht20/antigravity-work"
 REF="${GECKO_REF:-main}"
 BROWSER="${GECKO_BROWSER:-all}"
 USE_SDK="${GECKO_SDK:-0}"
+SKIP_CLI="${GECKO_SKIP_CLI:-0}"
 EXT_ID="${GECKO_EXT_ID:-}"
 
 export PATH="/opt/homebrew/bin:/usr/local/bin:$HOME/.local/bin:$HOME/.agy/bin:$HOME/.antigravity/bin:$PATH"
@@ -13,6 +14,10 @@ while [ "$#" -gt 0 ]; do
   case "$1" in
     --sdk)
       USE_SDK=1
+      shift
+      ;;
+    --skip-cli)
+      SKIP_CLI=1
       shift
       ;;
     --browser)
@@ -82,11 +87,24 @@ if [ "$USE_SDK" -eq 1 ]; then
   ARGS+=(--sdk)
 fi
 
+CLI_JUST_INSTALLED=0
+if [ "$SKIP_CLI" -ne 1 ] && ! command -v agy >/dev/null 2>&1; then
+  echo "Antigravity CLI ('agy') not found. Installing official Antigravity CLI..."
+  if curl -fsSL https://antigravity.google/cli/install.sh | bash; then
+    CLI_JUST_INSTALLED=1
+    export PATH="/opt/homebrew/bin:/usr/local/bin:$HOME/.local/bin:$HOME/.agy/bin:$HOME/.antigravity/bin:$PATH"
+  else
+    echo "Warning: Could not auto-install Antigravity CLI. Continuing with companion & MCP installation..." >&2
+  fi
+fi
+
 echo "Installing companion with ${PYTHON_BIN}..."
 "$PYTHON_BIN" "$BRIDGE_INSTALLER" "${ARGS[@]}"
 
 echo ""
 echo "Done! Return to Chrome -> Gecko for Antigravity Side Panel (it will auto-connect within 3 seconds)."
-if ! command -v agy >/dev/null 2>&1 && [ "$USE_SDK" -eq 0 ]; then
-  echo "Note: 'agy' CLI was not found in PATH. Antigravity App/IDE MCP is registered; for Side Panel chat without CLI, re-run with --sdk and set GEMINI_API_KEY."
+if [ "$CLI_JUST_INSTALLED" -eq 1 ]; then
+  echo "Next step: Run 'agy' once in Terminal to sign in with your Google account, then start chatting in Gecko!"
+elif ! command -v agy >/dev/null 2>&1 && [ "$USE_SDK" -eq 0 ]; then
+  echo "Note: 'agy' CLI was not found. Antigravity Desktop MCP is registered; install 'agy' or re-run with --sdk for Side Panel chat."
 fi
