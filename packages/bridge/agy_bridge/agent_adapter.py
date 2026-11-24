@@ -173,6 +173,9 @@ def build_agent_prompt(
 class BaseAgentAdapter:
     backend_name = "unknown"
 
+    async def list_models(self) -> list[dict[str, str]]:
+        return []
+
     async def stream_chat(self, prompt: str, model: str = "") -> AsyncIterator[str]:
         raise NotImplementedError
         yield ""  # pragma: no cover
@@ -265,6 +268,35 @@ class CLIAdapter(BaseAgentAdapter):
         version = re.search(rb"\b(\d+)\.(\d+)\.(\d+)\b", stdout)
         if process.returncode or not version or tuple(map(int, version.groups())) < (1, 5, 7):
             raise BridgeError("CLI_UNSUPPORTED")
+
+    async def list_models(self) -> list[dict[str, str]]:
+        try:
+            process = await asyncio.create_subprocess_exec(
+                str(self.executable), "models",
+                stdin=asyncio.subprocess.DEVNULL, stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.DEVNULL, **_spawn_options(),
+            )
+            try:
+                stdout, _ = await asyncio.wait_for(process.communicate(), timeout=8)
+            finally:
+                await _stop_process(process)
+        except (asyncio.TimeoutError, OSError):
+            return []
+        if process.returncode:
+            return []
+        models: list[dict[str, str]] = []
+        seen: set[str] = set()
+        for raw_line in stdout.decode("utf-8", errors="replace").splitlines():
+            line = raw_line.strip()
+            if not line or "\t" not in line:
+                continue
+            model_id, label = line.split("\t", 1)
+            model_id = model_id.strip()
+            label = label.strip() or model_id
+            if model_id and not model_id.startswith("-") and model_id not in seen:
+                seen.add(model_id)
+                models.append({"id": model_id, "label": label})
+        return models
 
     async def stream_chat(self, prompt: str, model: str = "") -> AsyncIterator[str]:
         # The prompt travels via stdin to keep page text out of process arguments.

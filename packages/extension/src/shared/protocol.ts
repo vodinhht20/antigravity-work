@@ -23,14 +23,12 @@ export interface UserSettings {
 }
 export const DEFAULT_SETTINGS: UserSettings = { theme: "system", model: "", customPrompts: [] };
 
-export const MODEL_OPTIONS = [
-  { id: "", label: "Mặc định (CLI)" },
-  { id: "gemini-2.5-pro", label: "Gemini 2.5 Pro" },
-  { id: "gemini-2.5-flash", label: "Gemini 2.5 Flash" },
-  { id: "gemini-3-pro-preview", label: "Gemini 3 Pro" },
-  { id: "gemini-3-flash-preview", label: "Gemini 3 Flash" },
-  { id: "claude-sonnet-4", label: "Claude Sonnet 4" },
-] as const;
+export interface ModelOption {
+  id: string;
+  label: string;
+}
+
+export const DEFAULT_MODEL_OPTION: ModelOption = { id: "", label: "Mặc định (CLI)" };
 
 export interface ChatMessage {
   id: string;
@@ -102,6 +100,7 @@ export interface AuditEntry {
 
 export type WorkerMessage =
   | { type: "bridge.status"; status: BridgeStatus }
+  | { type: "models.list"; models: ModelOption[] }
   | { type: "chat.delta"; id: string; text: string }
   | { type: "chat.tool"; id: string; name: string; status: "running" | "done" | "error"; detail?: string }
   | { type: "remote.tool"; name: string; status: "running" | "done" | "error"; detail?: string }

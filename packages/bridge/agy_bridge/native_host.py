@@ -165,6 +165,16 @@ class NativeMessagingBridge:
         except Exception:
             status["code"] = "BACKEND_ERROR"
         self.send({"type": "hello.result", "payload": status})
+        if self.adapter is not None and "code" not in status:
+            asyncio.create_task(self._push_models(self.adapter))
+
+    async def _push_models(self, adapter: BaseAgentAdapter) -> None:
+        try:
+            models = await adapter.list_models()
+            if models:
+                self.send({"type": "models.list", "payload": {"models": models}})
+        except Exception:
+            pass
 
     async def _chat(self, request_id: str, payload: dict, adapter: BaseAgentAdapter) -> None:
         message = text(payload.get("message"), 8000).strip()

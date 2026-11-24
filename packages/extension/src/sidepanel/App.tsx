@@ -1,8 +1,8 @@
 import React, { Suspense, lazy, useCallback, useEffect, useRef, useState } from "react";
 import {
-  Attachment, BridgeStatus, BUILTIN_SLASH_COMMANDS, ChatMessage, CustomPrompt, DEFAULT_SETTINGS,
-  MAX_ATTACHMENTS, MAX_MESSAGE_LENGTH, MODEL_OPTIONS, PanelMessage, SavedConversation, TabSummary,
-  UserSettings, WorkerMessage, bridgeError,
+  Attachment, BridgeStatus, BUILTIN_SLASH_COMMANDS, ChatMessage, CustomPrompt,
+  DEFAULT_MODEL_OPTION, DEFAULT_SETTINGS, MAX_ATTACHMENTS, MAX_MESSAGE_LENGTH, ModelOption,
+  PanelMessage, SavedConversation, TabSummary, UserSettings, WorkerMessage, bridgeError,
 } from "../shared/protocol";
 import { ChatMessageItem } from "./components/ChatMessageItem";
 
@@ -66,6 +66,7 @@ export function App() {
   const [selectedOption, setSelectedOption] = useState(0);
   const [notice, setNotice] = useState("");
   const [remoteStatus, setRemoteStatus] = useState("");
+  const [availableModels, setAvailableModels] = useState<ModelOption[]>([]);
   const [copiedCmd, setCopiedCmd] = useState(false);
   const [reading, setReading] = useState(false);
   const [grantedSites, setGrantedSites] = useState<string[]>([]);
@@ -143,6 +144,17 @@ export function App() {
     switch (message.type) {
       case "bridge.status":
         setStatus(message.status);
+        break;
+      case "models.list":
+        setAvailableModels(message.models);
+        setSettings((current) => {
+          if (current.model && !message.models.some((m) => m.id === current.model)) {
+            const next = { ...current, model: "" };
+            void chrome.storage.sync.set({ preferencesV2: next }).catch(() => {});
+            return next;
+          }
+          return current;
+        });
         break;
       case "chat.delta": {
         if (!active.current || active.current.id !== message.id) break;
@@ -425,9 +437,13 @@ export function App() {
   const clampedOption = activeOption ? Math.min(selectedOption, activeOption - 1) : 0;
   const statusText = status.phase === "ready" ? `Sẵn sàng · ${status.backend.toUpperCase()}`
     : status.phase === "connecting" ? "Đang kết nối" : "Cần kết nối";
-  const modelChoices = MODEL_OPTIONS.some((m) => m.id === settings.model)
-    ? MODEL_OPTIONS
-    : [...MODEL_OPTIONS, { id: settings.model, label: settings.model }];
+  const modelChoices: ModelOption[] = [
+    DEFAULT_MODEL_OPTION,
+    ...availableModels,
+    ...(settings.model && !availableModels.some((m) => m.id === settings.model)
+      ? [{ id: settings.model, label: settings.model }]
+      : []),
+  ];
 
   const isMac = /Mac|iPhone|iPad/i.test(navigator.userAgent);
   const isWindows = /Windows/i.test(navigator.userAgent);

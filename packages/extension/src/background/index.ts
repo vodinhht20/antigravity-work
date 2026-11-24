@@ -1,6 +1,6 @@
 import {
   Attachment, AuditEntry, BridgeStatus, DEFAULT_CONNECTION, MAX_ATTACHMENTS,
-  MAX_MESSAGE_LENGTH, MAX_REPLY_LENGTH, NATIVE_HOST_NAME, PanelMessage,
+  MAX_MESSAGE_LENGTH, MAX_REPLY_LENGTH, ModelOption, NATIVE_HOST_NAME, PanelMessage,
   PROTOCOL_VERSION, SavedConversation, WorkerMessage,
 } from "../shared/protocol";
 import { captureTab, executeBrowserTool, isSameDocument, redactText, summarizeTab } from "./browser_tools";
@@ -15,6 +15,7 @@ const requests = new Map<string, Request>();
 const pendingPrefills = new Map<number, { text: string; expires: number }>();
 let nativePort: chrome.runtime.Port | null = null;
 let bridgeStatus: BridgeStatus = { phase: "connecting" };
+let availableModels: ModelOption[] = [];
 let handshakeTimer: ReturnType<typeof setTimeout> | undefined;
 let retryTimer: ReturnType<typeof setTimeout> | undefined;
 let idleTimer: ReturnType<typeof setTimeout> | undefined;
@@ -145,6 +146,14 @@ function onNativeMessage(raw: NativeMessage) {
     }
     retries = 0;
     updateStatus({ phase: "ready", backend: payload.backend, version: String(payload.version ?? "") });
+    return;
+  }
+
+  if (type === "models.list" && Array.isArray(payload?.models)) {
+    availableModels = payload.models
+      .filter((m): m is Record<string, unknown> => m !== null && typeof m === "object" && typeof (m as Record<string, unknown>).id === "string")
+      .map((m) => ({ id: String(m.id), label: typeof m.label === "string" && m.label ? m.label : String(m.id) }));
+    for (const panel of panels) post(panel, { type: "models.list", models: availableModels });
     return;
   }
 
@@ -469,5 +478,6 @@ chrome.runtime.onConnect.addListener((port) => {
     });
   });
   post(panel, { type: "bridge.status", status: bridgeStatus });
+  if (availableModels.length) post(panel, { type: "models.list", models: availableModels });
   connectNative();
 });
