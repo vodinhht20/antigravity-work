@@ -2,10 +2,10 @@
 set -euo pipefail
 
 REPO="vodinhht20/antigravity-work"
-REF="main"
-BROWSER="all"
-USE_SDK=0
-EXT_ID=""
+REF="${GECKO_REF:-main}"
+BROWSER="${GECKO_BROWSER:-all}"
+USE_SDK="${GECKO_SDK:-0}"
+EXT_ID="${GECKO_EXT_ID:-}"
 
 export PATH="/opt/homebrew/bin:/usr/local/bin:$HOME/.local/bin:$HOME/.agy/bin:$HOME/.antigravity/bin:$PATH"
 

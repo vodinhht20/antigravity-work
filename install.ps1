@@ -9,8 +9,18 @@ param(
 $ErrorActionPreference = "Stop"
 $Repo = "vodinhht20/antigravity-work"
 
+if (-not $ExtensionId -and $env:GECKO_EXT_ID) {
+    $ExtensionId = $env:GECKO_EXT_ID.Trim()
+}
+if (-not $Sdk -and $env:GECKO_SDK -eq "1") {
+    $Sdk = $true
+}
+if (-not $ExtensionId) {
+    $ExtensionId = (Read-Host "Paste Gecko for Antigravity Extension ID (32 letters from chrome://extensions)").Trim()
+}
+
 if ($ExtensionId -notmatch '^[a-p]{32}$') {
-    Write-Error "Please pass the 32-letter Chrome Extension ID. Example: & ([scriptblock]::Create((irm https://raw.githubusercontent.com/$Repo/main/install.ps1))) <EXTENSION_ID>"
+    Write-Error "Invalid Extension ID '$ExtensionId'. Expected 32 lowercase letters (a-p). Example: `$env:GECKO_EXT_ID=`"<ID>`"; irm https://raw.githubusercontent.com/$Repo/main/install.ps1 | iex"
     exit 1
 }
 

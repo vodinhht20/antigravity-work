@@ -103,7 +103,7 @@ export default function SettingsDrawer({
           <summary>Cài companion trên máy này (1 dòng lệnh)</summary>
           <p>Chạy lệnh 1 dòng từ GitHub <code>vodinhht20/antigravity-work</code> trong {/Windows/i.test(navigator.userAgent) ? "PowerShell" : "Terminal"}:</p>
           <code className="setup-cmd">{/Windows/i.test(navigator.userAgent)
-            ? `& ([scriptblock]::Create((irm https://raw.githubusercontent.com/vodinhht20/antigravity-work/main/install.ps1))) ${chrome.runtime.id}`
+            ? `$env:GECKO_EXT_ID="${chrome.runtime.id}"; irm https://raw.githubusercontent.com/vodinhht20/antigravity-work/main/install.ps1 | iex`
             : `curl -fsSL https://raw.githubusercontent.com/vodinhht20/antigravity-work/main/install.sh | bash -s -- ${chrome.runtime.id}`}</code>
           <p>Extension ID</p>
           <div className="row-actions">
