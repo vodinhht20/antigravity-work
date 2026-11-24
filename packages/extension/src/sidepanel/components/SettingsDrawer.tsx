@@ -21,9 +21,34 @@ export default function SettingsDrawer({
   const [connection, setConnection] = useState(DEFAULT_CONNECTION);
   const [entries, setEntries] = useState<AuditEntry[]>([]);
   const [feedback, setFeedback] = useState("");
+  const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const [customCommand, setCustomCommand] = useState("");
   const [customText, setCustomText] = useState("");
   const [modelInput, setModelInput] = useState(settings.model);
+
+  const isWindows = /Windows/i.test(navigator.userAgent);
+  const extId = chrome.runtime.id;
+  const installCmd = isWindows
+    ? `irm https://raw.githubusercontent.com/vodinhht20/antigravity-work/main/install.ps1 | iex; Install-Gecko ${extId}`
+    : `curl -fsSL https://raw.githubusercontent.com/vodinhht20/antigravity-work/main/install.sh | bash -s -- ${extId}`;
+  const installSdkCmd = isWindows
+    ? `irm https://raw.githubusercontent.com/vodinhht20/antigravity-work/main/install.ps1 | iex; Install-Gecko ${extId} -Sdk`
+    : `curl -fsSL https://raw.githubusercontent.com/vodinhht20/antigravity-work/main/install.sh | bash -s -- ${extId} --sdk`;
+  const uninstallCmd = isWindows
+    ? "irm https://raw.githubusercontent.com/vodinhht20/antigravity-work/main/uninstall.ps1 | iex"
+    : "curl -fsSL https://raw.githubusercontent.com/vodinhht20/antigravity-work/main/uninstall.sh | bash";
+
+  const isMcpOnlyReady = status.phase === "error" && (
+    status.code === "CLI_MISSING" || status.code === "SDK_MISSING" || status.code === "SDK_AUTH_REQUIRED"
+  );
+
+  function copyValue(key: string, value: string, label: string) {
+    void navigator.clipboard.writeText(value).then(() => {
+      setCopiedKey(key);
+      setFeedback(`Đã sao chép ${label}.`);
+      setTimeout(() => setCopiedKey((curr) => curr === key ? null : curr), 1800);
+    }).catch(() => setFeedback("Không thể sao chép tự động."));
+  }
 
   useEffect(() => {
     setModelInput(settings.model);
@@ -74,44 +99,140 @@ export default function SettingsDrawer({
     <div className="settings">
       <h1>Cài đặt</h1>
       <section className="settings-section" aria-labelledby="connection-title">
-        <h2 id="connection-title">Kết nối Antigravity</h2>
-        <p role="status">{status.phase === "ready" ? `Đã kết nối với ${status.backend.toUpperCase()} · companion ${status.version}`
-          : status.phase === "connecting" ? "Đang kiểm tra companion…" : bridgeError(status.code)}</p>
+        <div className="section-head">
+          <h2 id="connection-title">Kết nối Antigravity</h2>
+          <span className={`status-badge ${status.phase === "ready" || isMcpOnlyReady ? "ready" : status.phase}`} role="status">
+            <span className={`dot ${status.phase === "ready" || isMcpOnlyReady ? "ready" : status.phase}`} />
+            {status.phase === "ready"
+              ? `${status.backend.toUpperCase()} · v${status.version}`
+              : isMcpOnlyReady
+                ? "MCP (Desktop)"
+                : status.phase === "connecting"
+                  ? "Đang kiểm tra…"
+                  : "Chưa kết nối"}
+          </span>
+        </div>
+
+        {status.phase === "error" && (
+          <p className="status-detail">
+            {isMcpOnlyReady
+              ? "Companion đã kết nối cho Antigravity Desktop (MCP). Để chat trực tiếp trên Side Panel, hãy chọn và cấu hình CLI hoặc SDK bên dưới."
+              : bridgeError(status.code)}
+          </p>
+        )}
+
         <form onSubmit={(event) => { event.preventDefault(); checkConnection(connection); }}>
-          <label>Backend
-            <select value={connection.backend} disabled={busy} onChange={(event) =>
-              setConnection({ ...connection, backend: event.target.value as ConnectionSettings["backend"] })}>
-              <option value="auto">Tự động</option>
-              <option value="cli">Antigravity CLI</option>
-              <option value="sdk">Antigravity SDK</option>
-            </select>
-          </label>
-          {connection.backend !== "sdk" && <label>Đường dẫn CLI dự phòng
-            <input type="text" maxLength={1024} value={connection.cliPath} disabled={busy}
-              placeholder={navigator.userAgent.includes("Windows") ? "C:\\…\\agy.exe" : "/usr/local/bin/agy"}
-              onChange={(event) => setConnection({ ...connection, cliPath: event.target.value })} />
-          </label>}
+          <div className="mode-cards" role="radiogroup" aria-label="Chế độ kết nối backend">
+            {([
+              {
+                id: "auto",
+                title: "Tự động",
+                badge: "Khuyên dùng",
+                desc: "Ưu tiên Antigravity CLI, tự động chuyển sang SDK nếu máy chưa cài CLI.",
+              },
+              {
+                id: "cli",
+                title: "Antigravity CLI (agy)",
+                badge: "Không cần API key",
+                desc: "Dùng phiên đăng nhập tài khoản Antigravity cá nhân, hỗ trợ tự động tải danh sách model.",
+              },
+              {
+                id: "sdk",
+                title: "Antigravity Python SDK",
+                badge: "API key / Vertex AI",
+                desc: "Chạy bằng GEMINI_API_KEY hoặc Vertex AI ADC (gcloud) mà không cần cài agy CLI.",
+              },
+            ] as const).map((option) => {
+              const selected = connection.backend === option.id;
+              return (
+                <button
+                  key={option.id}
+                  type="button"
+                  role="radio"
+                  aria-checked={selected}
+                  disabled={busy}
+                  className={`mode-card ${selected ? "selected" : ""}`}
+                  onClick={() => setConnection({ ...connection, backend: option.id })}
+                >
+                  <span className="mode-radio" aria-hidden="true" />
+                  <span className="mode-body">
+                    <span className="mode-title-row">
+                      <strong>{option.title}</strong>
+                      <span className="mode-pill">{option.badge}</span>
+                    </span>
+                    <small>{option.desc}</small>
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+
+          {connection.backend !== "sdk" ? (
+            <label className="field-box">
+              <span>Đường dẫn <code>agy</code> CLI tùy chỉnh <small className="muted-inline">(không bắt buộc)</small></span>
+              <input
+                type="text"
+                maxLength={1024}
+                value={connection.cliPath}
+                disabled={busy}
+                placeholder={isWindows ? "Để trống để tự tìm (vd: C:\\...\\agy.exe)" : "Để trống để tự tìm (vd: /opt/homebrew/bin/agy)"}
+                onChange={(event) => setConnection({ ...connection, cliPath: event.target.value })}
+              />
+            </label>
+          ) : (
+            <div className="sdk-guide">
+              <strong>Cấu hình xác thực SDK trên máy:</strong>
+              <ul>
+                <li><strong>Cách 1 (API Key):</strong> Đặt biến môi trường <code>GEMINI_API_KEY</code> rồi mở lại Chrome.</li>
+                <li><strong>Cách 2 (Không cần API key · Vertex AI):</strong> Chạy <code>gcloud auth application-default login</code> và đặt <code>GOOGLE_GENAI_USE_VERTEXAI=True</code>, <code>GOOGLE_CLOUD_PROJECT</code>.</li>
+              </ul>
+              <button
+                className="outline-btn"
+                type="button"
+                onClick={() => copyValue("sdk", installSdkCmd, "lệnh cài companion kèm SDK")}
+              >
+                {copiedKey === "sdk" ? "Đã sao chép lệnh cài SDK ✓" : "Sao chép lệnh cài kèm SDK"}
+              </button>
+            </div>
+          )}
+
           <div className="row-actions">
-            <button className="primary-btn" disabled={busy || status.phase === "connecting"}>Lưu và thử kết nối</button>
+            <button className="primary-btn" disabled={busy || status.phase === "connecting"}>Lưu & kiểm tra kết nối</button>
             <button className="text-btn" type="button" disabled={busy || status.phase === "connecting"} onClick={() => {
               setConnection(DEFAULT_CONNECTION);
               checkConnection(DEFAULT_CONNECTION);
-            }}>Đặt lại tự động</button>
+            }}>Đặt lại mặc định</button>
           </div>
         </form>
-        <details>
-          <summary>Cài companion trên máy này (1 dòng lệnh)</summary>
-          <p>Chạy lệnh 1 dòng từ GitHub <code>vodinhht20/antigravity-work</code> trong {/Windows/i.test(navigator.userAgent) ? "PowerShell" : "Terminal"}:</p>
-          <code className="setup-cmd">{/Windows/i.test(navigator.userAgent)
-            ? `irm https://raw.githubusercontent.com/vodinhht20/antigravity-work/main/install.ps1 | iex; Install-Gecko ${chrome.runtime.id}`
-            : `curl -fsSL https://raw.githubusercontent.com/vodinhht20/antigravity-work/main/install.sh | bash -s -- ${chrome.runtime.id}`}</code>
-          <p>Extension ID</p>
-          <div className="row-actions">
-            <code className="extension-id">{chrome.runtime.id}</code>
-            <button className="text-btn" onClick={() => {
-              void navigator.clipboard.writeText(chrome.runtime.id).then(() => setFeedback("Đã sao chép Extension ID."))
-                .catch(() => setFeedback("Không thể sao chép tự động."));
-            }}>Sao chép ID</button>
+
+        <details className="companion-box">
+          <summary>Cài đặt / Cập nhật / Gỡ Companion ({isWindows ? "Windows" : "macOS / Linux"})</summary>
+          <div className="cmd-group">
+            <div className="cmd-head">
+              <span>Lệnh cài / cập nhật nhanh</span>
+              <button className="text-btn" type="button" onClick={() => copyValue("install", installCmd, "lệnh cài companion")}>
+                {copiedKey === "install" ? "Đã chép ✓" : "Sao chép"}
+              </button>
+            </div>
+            <code className="setup-cmd">{installCmd}</code>
+          </div>
+          <div className="cmd-group">
+            <div className="cmd-head">
+              <span>Lệnh gỡ companion</span>
+              <button className="text-btn" type="button" onClick={() => copyValue("uninstall", uninstallCmd, "lệnh gỡ companion")}>
+                {copiedKey === "uninstall" ? "Đã chép ✓" : "Sao chép"}
+              </button>
+            </div>
+            <code className="setup-cmd">{uninstallCmd}</code>
+          </div>
+          <div className="cmd-group">
+            <div className="cmd-head">
+              <span>Extension ID</span>
+              <button className="text-btn" type="button" onClick={() => copyValue("id", extId, "Extension ID")}>
+                {copiedKey === "id" ? "Đã chép ✓" : "Sao chép ID"}
+              </button>
+            </div>
+            <code className="extension-id">{extId}</code>
           </div>
         </details>
       </section>
