@@ -20,7 +20,7 @@ foreach ($b in $Targets) {
     $regPath = $RegMap[$b]
     if (Test-Path $regPath) {
         Remove-Item -Path $regPath -Recurse -Force
-        Write-Host "Removed registry key for $b: $regPath"
+        Write-Host "Removed registry key for ${b}: $regPath"
     }
 }
 
