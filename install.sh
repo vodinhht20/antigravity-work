@@ -76,7 +76,7 @@ echo "Downloading Gecko for Antigravity companion from github.com/${REPO} (${REF
 TARBALL_URL="https://codeload.github.com/${REPO}/tar.gz/refs/heads/${REF}"
 curl -fsSL "$TARBALL_URL" | tar -xz -C "$TMP_DIR"
 
-BRIDGE_INSTALLER="$(find "$TMP_DIR" -maxdepth 4 -path '*/packages/bridge/scripts/install_host.py' | head -n 1)"
+BRIDGE_INSTALLER="$(find "$TMP_DIR" -path '*/packages/bridge/scripts/install_host.py' -type f | head -n 1)"
 if [ -z "$BRIDGE_INSTALLER" ] || [ ! -f "$BRIDGE_INSTALLER" ]; then
   echo "Error: Could not find packages/bridge/scripts/install_host.py in downloaded archive." >&2
   exit 1
