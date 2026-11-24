@@ -451,7 +451,11 @@ export function App() {
     ? `irm https://raw.githubusercontent.com/vodinhht20/antigravity-work/main/install.ps1 | iex; Install-Gecko ${chrome.runtime.id}`
     : `curl -fsSL https://raw.githubusercontent.com/vodinhht20/antigravity-work/main/install.sh | bash -s -- ${chrome.runtime.id}`;
   const showSetupWizard = status.phase === "error" && (status.code === "HOST_MISSING" || status.code === "HOST_FORBIDDEN");
-  const showBackendWizard = status.phase === "error" && (status.code === "CLI_MISSING" || status.code === "SDK_AUTH_REQUIRED");
+  const showBackendWizard = status.phase === "error" && (
+    status.code === "CLI_MISSING" || status.code === "SDK_MISSING" || status.code === "SDK_AUTH_REQUIRED"
+  );
+  const dotPhase = showBackendWizard ? "ready" : status.phase;
+  const headerStatusText = showBackendWizard ? "Sẵn sàng · MCP (Desktop)" : statusText;
 
   return (
     <div className="app" data-theme={settings.theme} onKeyDown={(event) => {
@@ -462,7 +466,7 @@ export function App() {
           <img src="icons/icon48.png" width="32" height="32" alt="" />
           <div>
             <div className="title">Gecko for Antigravity</div>
-            <div className="subtitle" role="status"><span className={`dot ${status.phase}`} />{statusText}</div>
+            <div className="subtitle" role="status"><span className={`dot ${dotPhase}`} />{headerStatusText}</div>
           </div>
         </div>
         <nav className="top-actions" aria-label="Hội thoại và cài đặt">
@@ -525,8 +529,9 @@ export function App() {
               <small className="muted-note">Đang tự động kiểm tra kết nối mỗi 3 giây…</small>
             </section>}
             {showBackendWizard && <section className="setup-wizard">
-              <h2>Chưa tìm thấy Antigravity CLI / SDK</h2>
-              <p>{bridgeError(status.code)} Nếu máy {isMac ? "Mac " : ""}chỉ cài Antigravity App (chưa có <code>agy</code> CLI), bạn có thể cài <code>agy</code> hoặc chạy lại bộ cài thêm <code>--sdk</code> và cấu hình <code>GEMINI_API_KEY</code>.</p>
+              <h2>Đã kết nối Antigravity Desktop (MCP)</h2>
+              <p>Cánh tay điều khiển từ xa đã sẵn sàng — bạn có thể ra lệnh trực tiếp từ <strong>Antigravity Desktop / IDE</strong> để thao tác trên Chrome ngay bây giờ.</p>
+              <p>Nếu muốn chat trực tiếp trong Side Panel này, hãy cài thêm <code>agy</code> CLI hoặc chạy lại bộ cài với <code>{isWindows ? "-Sdk" : "--sdk"}</code> (hỗ trợ <code>GEMINI_API_KEY</code> hoặc Vertex AI ADC).</p>
               <div className="row-actions">
                 <button className="primary-btn" type="button" onClick={() => openDrawer("settings")}>Mở Cài đặt kết nối</button>
                 <button className="outline-btn" type="button" onClick={() => send({ type: "bridge.reconnect" })}>Thử kết nối lại</button>

@@ -190,16 +190,25 @@ class SDKAdapter(BaseAgentAdapter):
             from google.antigravity.types import BuiltinTools  # noqa: F401
         except (ImportError, AttributeError) as exc:
             raise BridgeError("SDK_MISSING") from exc
-        if not (os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")):
+        self._use_vertex = os.environ.get("GOOGLE_GENAI_USE_VERTEXAI", "").strip().lower() in {"1", "true", "yes"}
+        self._project = os.environ.get("GOOGLE_CLOUD_PROJECT", "").strip()
+        self._location = os.environ.get("GOOGLE_CLOUD_LOCATION", "us-central1").strip() or "us-central1"
+        has_api_key = bool(os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY"))
+        has_vertex_adc = self._use_vertex and bool(self._project)
+        if not (has_api_key or has_vertex_adc):
             raise BridgeError("SDK_AUTH_REQUIRED")
 
     async def stream_chat(self, prompt: str, model: str = "") -> AsyncIterator[str]:
         from google.antigravity import Agent, CapabilitiesConfig, LocalAgentConfig
         from google.antigravity.types import BuiltinTools
 
-        options = {"capabilities": CapabilitiesConfig(enabled_tools=[BuiltinTools.FINISH])}
+        options: dict = {"capabilities": CapabilitiesConfig(enabled_tools=[BuiltinTools.FINISH])}
         if model:
             options["model"] = model
+        if self._use_vertex and self._project:
+            options["vertex"] = True
+            options["project"] = self._project
+            options["location"] = self._location
         config = LocalAgentConfig(**options)
         async with Agent(config) as agent:
             response = await agent.chat(prompt)

@@ -137,7 +137,14 @@ function onNativeMessage(raw: NativeMessage) {
       return;
     }
     if (payload.code) {
-      stopNative(String(payload.code));
+      const code = String(payload.code);
+      if (code === "CLI_MISSING" || code === "SDK_MISSING" || code === "SDK_AUTH_REQUIRED") {
+        // Keep nativePort alive so the local MCP relay remains online for Antigravity Desktop/IDE.
+        retries = 0;
+        updateStatus({ phase: "error", code });
+        return;
+      }
+      stopNative(code);
       return;
     }
     if (payload.backend !== "cli" && payload.backend !== "sdk") {
