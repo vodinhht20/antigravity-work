@@ -1,44 +1,43 @@
 # Gecko for Antigravity (v0.6.0)
 
-**Gecko for Antigravity** là Chrome Extension độc lập (Manifest V3) cung cấp Side Panel AI và **cánh tay điều khiển trình duyệt từ xa** tương thích Antigravity CLI, Antigravity App/IDE (qua MCP) và Antigravity Python SDK — hỗ trợ cả **macOS** và **Windows**.
+**Gecko for Antigravity** là Chrome Extension độc lập (Manifest V3) giao tiếp trực tiếp qua **Antigravity CLI (`agy`)** và hỗ trợ **cánh tay điều khiển trình duyệt từ xa (MCP)** cho **Antigravity Desktop / IDE** trên cả **macOS** và **Windows**.
 
-## Cài đặt nhanh (1 dòng lệnh từ GitHub — không cần tải thư mục companion)
+## Cài đặt nhanh (1 dòng lệnh — tự cài CLI + Companion + MCP)
 
-1. Load extension `packages/extension/dist` vào `chrome://extensions` (hoặc cài từ `gecko-for-antigravity-chrome-0.6.0.zip`).
+1. Tải và load extension từ `gecko-for-antigravity-chrome-0.6.0.zip` (hoặc `packages/extension/dist`) trong `chrome://extensions`.
 2. Mở Side Panel → bấm **Sao chép lệnh cài** (đã tự điền sẵn Extension ID) và dán vào Terminal / PowerShell:
-   - **macOS / Linux**:
-     ```bash
-     curl -fsSL https://raw.githubusercontent.com/vodinhht20/antigravity-work/main/install.sh | bash -s -- <EXTENSION_ID>
-     ```
-     *(Nếu máy Mac chỉ cài Antigravity App và chưa có `agy` CLI, thêm `--sdk` ở cuối lệnh).*
    - **Windows (PowerShell)**:
      ```powershell
      irm https://raw.githubusercontent.com/vodinhht20/antigravity-work/main/install.ps1 | iex; Install-Gecko <EXTENSION_ID>
      ```
-     *(Có thể thêm `-Sdk` hoặc `-Browser chrome` ở cuối lệnh, ví dụ `Install-Gecko <EXTENSION_ID> -Sdk`).*
-3. Bộ cài tự động:
-   - Kiểm tra xem máy đã có **Antigravity CLI (`agy`)** chưa — nếu chưa sẽ tự cài bản chính thức từ `antigravity.google` (có thể bỏ qua bằng `--skip-cli` / `-SkipCli`).
-   - Đăng ký Native Messaging Host cho Chrome/Edge/Brave/Chromium (có launcher wrapper nạp đầy đủ `PATH` trên macOS).
-   - Tự đăng ký MCP Server `gecko-for-antigravity` vào `~/.gemini/antigravity/mcp_config.json` để **Antigravity App / IDE** ra lệnh trực tiếp cho Chrome.
-4. Quay lại Side Panel — extension tự động kiểm tra kết nối mỗi 3 giây và chuyển sang **Sẵn sàng**.
+   - **macOS / Linux (Terminal)**:
+     ```bash
+     curl -fsSL https://raw.githubusercontent.com/vodinhht20/antigravity-work/main/install.sh | bash -s -- <EXTENSION_ID>
+     ```
+3. Bộ cài sẽ tự động:
+   - Kiểm tra và cài đặt **Antigravity CLI (`agy`)** chính thức từ `antigravity.google` nếu máy chưa có.
+   - Cài đặt companion và đăng ký Native Messaging Host cho Chrome, Edge, Brave, Chromium (tương thích cả Python 3.9+ sẵn có trên macOS).
+   - Tự đăng ký MCP Server `gecko-for-antigravity` vào `~/.gemini/antigravity/mcp_config.json` cho Antigravity Desktop / IDE.
+4. Nếu vừa mới cài `agy` lần đầu, mở terminal gõ `agy` để đăng nhập 1 lần bằng tài khoản Google/Antigravity (không cần API key). Side Panel sẽ tự chuyển sang **Sẵn sàng · CLI** và tự nạp danh sách model thật từ `agy models`.
 
 ## Gỡ cài đặt companion (1 dòng lệnh)
 
-- **macOS / Linux**:
-  ```bash
-  curl -fsSL https://raw.githubusercontent.com/vodinhht20/antigravity-work/main/uninstall.sh | bash
-  ```
 - **Windows (PowerShell)**:
   ```powershell
   irm https://raw.githubusercontent.com/vodinhht20/antigravity-work/main/uninstall.ps1 | iex
   ```
+- **macOS / Linux (Terminal)**:
+  ```bash
+  curl -fsSL https://raw.githubusercontent.com/vodinhht20/antigravity-work/main/uninstall.sh | bash
+  ```
 
 ## Tính năng nổi bật
 
-- **Tốc độ cao & không giới hạn bước**: Tự đính kèm snapshot ban đầu (~20ms), gộp nhiều thao tác trong 1 lượt AI (multi-tool batching), tự nén lịch sử bước cũ (rolling compression).
-- **Con trỏ chuột ảo mượt & hiệu ứng click**: Di chuyển theo đường cong Bézier tự nhiên, hiệu ứng gợn sóng khi click, tự mở liên kết `target="_blank"` không bị chặn popup.
-- **Chọn Model AI trực tiếp**, **menu chuột phải "Hỏi Gecko for Antigravity"**, **cấp quyền tương tác 1 lần** (`optional_host_permissions`).
-- **Bảo vệ an toàn**: Luôn chặn mật khẩu, thanh toán, ngân hàng, CAPTCHA và che dữ liệu nhạy cảm.
+- **Giao tiếp trực tiếp qua Antigravity CLI**: Không cần API key, tự động đồng bộ danh sách model khả dụng theo tài khoản (`agy models`).
+- **Tốc độ cao & không giới hạn bước**: Tự chụp snapshot ban đầu (~20ms), gộp nhiều thao tác trong 1 lượt AI (multi-tool batching), tự nén lịch sử bước cũ (rolling compression).
+- **Con trỏ chuột ảo mượt & hiệu ứng click**: Di chuyển theo đường cong Bézier tự nhiên, hiệu ứng gợn sóng khi click, hỗ trợ mở liên kết `target="_blank"`.
+- **Cánh tay từ xa MCP**: Điều khiển Chrome trực tiếp từ Antigravity Desktop / IDE qua loopback relay bảo mật (`127.0.0.1` + token ngẫu nhiên).
+- **An toàn & quyền riêng tư**: Cấp quyền tương tác 1 lần qua `optional_host_permissions`, luôn chặn mật khẩu, thanh toán, ngân hàng, CAPTCHA và che dữ liệu nhạy cảm.
 
 ## Hồ sơ Chrome Web Store
 - [docs/STORE_LISTING.md](docs/STORE_LISTING.md)

@@ -530,10 +530,16 @@ export function App() {
             </section>}
             {showBackendWizard && <section className="setup-wizard">
               <h2>Đã kết nối Antigravity Desktop (MCP)</h2>
-              <p>Cánh tay điều khiển từ xa đã sẵn sàng — bạn có thể ra lệnh trực tiếp từ <strong>Antigravity Desktop / IDE</strong> để thao tác trên Chrome ngay bây giờ.</p>
-              <p>Nếu muốn chat trực tiếp trong Side Panel này, hãy cài thêm <code>agy</code> CLI hoặc chạy lại bộ cài với <code>{isWindows ? "-Sdk" : "--sdk"}</code> (hỗ trợ <code>GEMINI_API_KEY</code> hoặc Vertex AI ADC).</p>
+              <p>Cánh tay điều khiển từ xa đã sẵn sàng — bạn có thể ra lệnh trực tiếp từ <strong>Antigravity Desktop / IDE</strong> để thao tác trên Chrome.</p>
+              <p>Để chat trực tiếp trên Side Panel này, hãy chạy lệnh cài để tự cài <code>agy</code> CLI rồi đăng nhập 1 lần bằng <code>agy</code>:</p>
+              <code className="setup-cmd">{installCmd}</code>
               <div className="row-actions">
-                <button className="primary-btn" type="button" onClick={() => openDrawer("settings")}>Mở Cài đặt kết nối</button>
+                <button className="primary-btn" type="button" onClick={() => {
+                  void navigator.clipboard.writeText(installCmd).then(() => {
+                    setCopiedCmd(true);
+                    setTimeout(() => setCopiedCmd(false), 1800);
+                  }).catch(() => setNotice("Không thể sao chép tự động."));
+                }}>{copiedCmd ? "Đã sao chép lệnh ✓" : "Sao chép lệnh cài CLI"}</button>
                 <button className="outline-btn" type="button" onClick={() => send({ type: "bridge.reconnect" })}>Thử kết nối lại</button>
               </div>
             </section>}
